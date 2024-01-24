@@ -1,9 +1,14 @@
 import fs from 'fs';
+import path from 'path';
 import admin from 'firebase-admin';
 import express from 'express';
 // import { MongoClient } from 'mongodb';
 import { db, connectToDb } from './db.js';
+import { fileURLToPath } from 'url';
+import 'dotenv/config';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename)
 const credentials = JSON.parse(
     fs.readFileSync('./credentials.json')
 );
@@ -13,6 +18,11 @@ admin.initializeApp({
 
 const app = express();
 app.use(express.json());    // It parses input json and makes it available on request.body
+app.use(express.static(path.join(__dirname, '../build')));
+
+app.get(/^(?!\/api).+/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../build/index.html'));
+})
 
 /*
 let articlesInfo = [{
@@ -151,9 +161,11 @@ app.get('/hello/:name', (request, response) => {
 });
 */
 
+const PORT = process.env.PORT || 8000;
+
 connectToDb(() => {
     console.log('Successfully connected to database!!')
-    app.listen(8000, () => {
-        console.log('Server is listening on port 8000');
+    app.listen(PORT, () => {
+        console.log('Server is listening on port ' + PORT);
     });
 })
